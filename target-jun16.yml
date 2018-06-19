@@ -1,0 +1,45 @@
+---
+- name: 'onion'
+  price: 0.99
+- name: 'onion'
+  price: 0.99
+- name: 'onion'
+  price: 0.99
+- name: 'onion'
+  price: 0.99
+- name: 'kraft'
+  price: 3.89
+- name: 'aloutte'
+  price: 3.99
+- name: 'hungry jack'
+  price: 2.69
+- name: 'bear naked'
+  price: 2.48
+- name: 'bisquick'
+  price: 3.49
+- name: 'bisquick'
+  price: 3.49
+- name: 'mp frzen veg'
+  price: 0.89
+- name: 'sb juice'
+  price: 2.52
+- name: 'sb milk subs'
+  price: 2.60
+- name: 'chobani'
+  price: 1.49
+- name: 'chobani'
+  price: 2.61
+- name: 'lifeway'
+  price: 2.32
+- name: 'mp shredded'
+  price: 1.80
+- name: 'pots and pan'
+  price: 39.99
+- name: 'toaster oven'
+  price: 29.99
+- name: 'squaretrade'
+  price: 5.00
+- name: 'dinwre set'
+  price: 34.98
+- name: 'up&up towel'
+  price: 6.64
