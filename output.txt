@@ -1,6 +1,4 @@
-```
-$ stack runghc TargetPrices.hs -- target-jun16.yml
-```
+# $ stack runghc TargetPrices.hs -- target-jun16.yml
 
   Item           Cost      Sum
   -------------- --------- ----------
