@@ -1,6 +1,7 @@
 ```
 $ stack runghc TargetPrices.hs -- target-jun16.yml
-```  
+```
+
   Item           Cost      Sum
   -------------- --------- ----------
   onion          \$0.99    \$0.99
