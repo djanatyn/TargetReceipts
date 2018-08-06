@@ -1,0 +1,3 @@
+# TargetReceipts
+
+usage: `./TargetReceipts <path>`
