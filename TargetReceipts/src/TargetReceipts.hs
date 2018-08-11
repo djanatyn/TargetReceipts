@@ -54,9 +54,6 @@ searchDPCI filter = do
   parseRequest url >>= httpJSON >>= (return . getResponseBody) where
     url = "https://redsky.target.com/v1/plp/search/?count=1&keyword=" ++ filter
 
--- do { response <- searchDPCI "211080031"; return $ parseResponse response }
--- Success [("Naked Green Machine All Natural Fruit + Boosts Juice Smoothie - 15.2oz",2.79,"/p/naked-green-machine-all-natural-fruit-boosts-juice-smoothie-15-2oz/-/A-13397596")]
-
 parseResponse :: Object -> Result [(String, USD, DPCI, String)]
 parseResponse = parse $ (.: "search_response") >=> (.: "items") >=> (.: "Item") >=> (mapM parseItem) where
   parseItem item = do
