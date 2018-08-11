@@ -32,6 +32,7 @@ data Item = Item
   { name  :: String
   , price :: USD
   , url   :: String
+  , itemDPCI  :: DPCI
   } deriving Show
 
 data Purchase = Purchase
@@ -56,24 +57,25 @@ searchDPCI filter = do
 -- do { response <- searchDPCI "211080031"; return $ parseResponse response }
 -- Success [("Naked Green Machine All Natural Fruit + Boosts Juice Smoothie - 15.2oz",2.79,"/p/naked-green-machine-all-natural-fruit-boosts-juice-smoothie-15-2oz/-/A-13397596")]
 
-parseResponse :: Object -> Result [(String, USD, String)]
+parseResponse :: Object -> Result [(String, USD, DPCI, String)]
 parseResponse = parse $ (.: "search_response") >=> (.: "items") >=> (.: "Item") >=> (mapM parseItem) where
   parseItem item = do
-    title <- item .: "title"
-    price <- item .: "list_price" >>= (.: "max_price")
-    url   <- item .: "url"
+    title     <- item .: "title"
+    price     <- item .: "list_price" >>= (.: "price")
+    itemDPCI  <- item .:? "dpci" .!= "N/A"
+    url       <- item .: "url"
 
-    return (title, price, url)
+    return (title, price, itemDPCI, url)
 
 fetchItem :: Purchase -> IO Item
 fetchItem purchase = do
   response <- searchDPCI $ dpci purchase
-  
+
   let item = case parseResponse response of
-              Success [(name, price, url)] -> case discount purchase of
-                Nothing -> Item{..}
+              Success [(name, price, itemDPCI, url)] -> case discount purchase of
+                Nothing     -> Item{..}
                 Just offset -> Item{..} { price = price + offset }
-              _ -> error $ "could not fetch item (" ++ show purchase ++ ")"
+              e -> error $ "could not fetch item (" ++ show purchase ++ ") " ++ (show e)
       validURL = ("https://www.target.com" ++ url item) in
         return $ item { url = validURL }
 
@@ -85,10 +87,11 @@ priceTable :: [Item] -> Pandoc
 priceTable items = doc $ simpleTable header rows
   where createRow :: Item -> USD -> [Blocks]
         createRow item totalSum = [ plain $ str $ name item
+                                  , plain $ str $ itemDPCI item
                                   , plain $ str $ url item
                                   , plain $ str $ formatCost $ price item
                                   , plain $ str $ formatCost totalSum ]
-        header = [plain "Item", plain "URL", plain "Cost", plain "Sum"]
+        header = [plain "Item", plain "DPCI", plain "URL", plain "Cost", plain "Sum"]
         rows = zipWith createRow items (tail $ totalCost items)
 
 -- pandoc table rendering
@@ -104,6 +107,6 @@ main = do
   let path = unwords args
 
   items <- loadPurchases path >>= mapM fetchItem
-  
+
   result <- runIO (writeOrg def (priceTable items)) >>= handleError
   TIO.putStrLn result
