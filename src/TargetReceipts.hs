@@ -3,6 +3,7 @@
 
 module TargetReceipts where
 
+import           Data.Either
 import           Data.Yaml
 import           GHC.Generics
 
@@ -29,10 +30,10 @@ type DPCI = String
 type USD = Double
 
 data Item = Item
-  { name  :: String
-  , price :: USD
-  , url   :: String
-  , itemDPCI  :: DPCI
+  { name     :: String
+  , price    :: USD
+  , url      :: String
+  , itemDPCI :: DPCI
   } deriving Show
 
 data Purchase = Purchase
@@ -62,7 +63,7 @@ parseResponse = parse $ (.: "search_response") >=> (.: "items") >=> (.: "Item") 
     itemDPCI  <- item .:? "dpci" .!= "N/A"
     url       <- item .: "url"
 
-    return (title, price, itemDPCI, url)
+    return (title, price, itemDPCI, "https://www.target.com/" ++ url)
 
 fetchItem :: Purchase -> IO Item
 fetchItem purchase = do
@@ -75,6 +76,17 @@ fetchItem purchase = do
               e -> error $ "could not fetch item (" ++ show purchase ++ ") " ++ (show e)
       validURL = ("https://www.target.com" ++ url item) in
         return $ item { url = validURL }
+
+fetchMaybeItem :: Purchase -> IO (Either String Item)
+fetchMaybeItem purchase = do
+  response <- searchDPCI $ dpci purchase
+
+  let item = case parseResponse response of
+              Success [(name, price, itemDPCI, url)] -> case discount purchase of
+                Nothing     -> Right Item{..}
+                Just offset -> Right Item{..} { price = price + offset }
+              e -> Left $ "could not fetch item (" ++ show purchase ++ ") " ++ (show e) in
+    return item
 
 -- calculate total price incrementally with fold
 totalCost :: [Item] -> [USD]
@@ -103,7 +115,8 @@ main = do
   args <- getArgs
   let path = unwords args
 
-  items <- loadPurchases path >>= mapM fetchItem
+  items <- loadPurchases path >>= mapM fetchMaybeItem
 
-  result <- runIO (writeOrg def (priceTable items)) >>= handleError
+  print (lefts items)
+  result <- runIO (writeOrg def (priceTable (rights items))) >>= handleError
   TIO.putStrLn result
