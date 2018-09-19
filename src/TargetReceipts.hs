@@ -4,6 +4,7 @@
 module TargetReceipts where
 
 import           Data.Either
+import           Data.Maybe
 import           Data.Yaml
 import           GHC.Generics
 
@@ -59,11 +60,16 @@ parseResponse :: Object -> Result [(String, USD, DPCI, String)]
 parseResponse = parse $ (.: "search_response") >=> (.: "items") >=> (.: "Item") >=> (mapM parseItem) where
   parseItem item = do
     title     <- item .: "title"
-    price     <- item .: "list_price" >>= (.: "price")
+
+    listPrice <- item .: "list_price" >>= (.:? "price")
+    minPrice  <- item .: "list_price" >>= (.:? "min_price")
+    maxPrice  <- item .: "list_price" >>= (.:? "max_price")
+
     itemDPCI  <- item .:? "dpci" .!= "N/A"
     url       <- item .: "url"
 
-    return (title, price, itemDPCI, "https://www.target.com/" ++ url)
+    let price = foldr1 max . catMaybes $ [listPrice, minPrice, maxPrice] in
+      return (title, price, itemDPCI, "https://www.target.com" ++ url)
 
 fetchItem :: Purchase -> IO Item
 fetchItem purchase = do
