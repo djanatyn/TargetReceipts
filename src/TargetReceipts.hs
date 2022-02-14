@@ -12,6 +12,7 @@ import           Control.Applicative
 import           Control.Monad
 
 import qualified Data.Text.IO            as TIO
+import qualified Data.Text as T
 
 import           Text.Pandoc             (def, handleError, runIO)
 import           Text.Pandoc.Builder
@@ -101,11 +102,11 @@ totalCost = scanl (+) 0 . map price
 priceTable :: [Item] -> Pandoc
 priceTable items = doc $ simpleTable header rows
   where createRow :: Item -> USD -> [Blocks]
-        createRow item totalSum = [ plain $ str $ name item
-                                  , plain $ str $ itemDPCI item
-                                  , plain $ str $ url item
-                                  , plain $ str $ formatCost $ price item
-                                  , plain $ str $ formatCost totalSum ]
+        createRow item totalSum = [ plain $ str $ T.pack $ name item
+                                  , plain $ str $ T.pack $ itemDPCI item
+                                  , plain $ str $ T.pack $ url item
+                                  , plain $ str $ T.pack $ formatCost $ price item
+                                  , plain $ str $ T.pack $ formatCost totalSum ]
         header = [plain "Item", plain "DPCI", plain "URL", plain "Cost", plain "Sum"]
         rows = zipWith createRow items (tail $ totalCost items)
 
